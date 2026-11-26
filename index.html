@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rekapan Monzie — Pemasukan &amp; Pengeluaran Mingguan</title>
-<meta name="description" content="Rekapan transaksi pemasukan dan pengeluaran mingguan. Publik bisa memantau, admin bisa mengelola.">
+<meta name="description" content="Rekapan transaksi pemasukan dan pengeluaran mingguan. Publik bisa memantau, admin bisa mengelola. Data tersinkron via Firebase.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
 <style>
 :root{
@@ -58,6 +58,7 @@ h1{font-size:26px;margin:0;line-height:1.15}
 .tx .acts{margin-top:6px;display:flex;gap:6px;justify-content:flex-end}
 .empty{color:var(--muted);text-align:center;padding:24px 0}
 .notice{background:rgba(245,158,11,.12);border:1px solid var(--amber);color:#fcd34d;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:14px}
+.notice.sync{background:rgba(56,189,248,.10);border-color:var(--blue);color:#bae6fd}
 footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-top:1px solid var(--border);padding-top:14px}
 /* modal */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:flex-start;justify-content:center;padding:20px 12px;z-index:50}
@@ -86,6 +87,8 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
       <button class="btn hidden" id="logoutBtn" onclick="logout()">Keluar</button>
     </div>
   </header>
+
+  <div class="notice sync" id="syncBanner">📍 Mode lokal — sinkron belum aktif.</div>
 
   <div class="notice" id="demoNotice">📌 Menampilkan <b>data contoh</b> minggu ini. Admin bisa menghapusnya di Pengaturan.</div>
 
@@ -130,11 +133,10 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
 
   <div id="txList"></div>
 
-  <footer>
+  <footer id="syncFooter">
     <b>Catatan penting:</b> Data aplikasi ini tersimpan di perangkat ini saja (localStorage browser),
-    belum ada sinkronisasi server. Artinya, entri yang ditambahkan admin di satu perangkat
-    <b>tidak otomatis terlihat</b> di perangkat publik lain — untuk itu perlu backend bersama nanti.
-    Publik bisa memantau rekap di perangkat yang sama, atau dari file ekspor (JSON/CSV) yang dibagikan admin.
+    belum ada sinkronisasi server karena konfigurasi Firebase belum diisi. Artinya, entri yang ditambahkan admin di satu perangkat
+    <b>tidak otomatis terlihat</b> di perangkat lain.
     <br>Rekapan Monzie • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.
   </footer>
 </div>
@@ -143,8 +145,8 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
 <div class="overlay" id="loginOverlay">
   <div class="modal">
     <h2>Login Admin</h2>
-    <label>Username</label>
-    <input id="loginUser" value="admin" autocomplete="username">
+    <label>Email admin</label>
+    <input id="loginEmail" type="email" placeholder="zmonzie@gmail.com" autocomplete="username">
     <label>Password</label>
     <input id="loginPass" type="password" placeholder="Password admin" autocomplete="current-password">
     <div class="err" id="loginErr"></div>
@@ -152,7 +154,7 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
       <button class="btn" onclick="closeLogin()">Batal</button>
       <button class="btn primary" onclick="doLogin()">Masuk</button>
     </div>
-    <p style="font-size:12px;color:var(--muted)">Default: admin / monzie123 — segera ganti di Pengaturan setelah login pertama.</p>
+    <p style="font-size:12px;color:var(--muted)">Login dengan email admin Firebase (dibuat di Firebase Console → Authentication). Publik tidak perlu login — cukup buka aplikasi untuk memantau.</p>
   </div>
 </div>
 
@@ -186,7 +188,7 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
 <div class="overlay" id="settingsOverlay">
   <div class="modal">
     <h2>Pengaturan Admin</h2>
-    <label>Password baru</label>
+    <label>Password baru (min. 6 karakter)</label>
     <input id="newPass" type="password" placeholder="Minimal 6 karakter" autocomplete="new-password">
     <div class="actions" style="justify-content:flex-start">
       <button class="btn" onclick="changePassword()">Ganti Password</button>
@@ -194,6 +196,7 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
     <div class="err" id="settingsErr"></div>
     <hr style="border-color:var(--border)">
     <div class="settings-list">
+      <button class="btn" id="uploadBtn" onclick="uploadLocalToFirebase()">☁️ Upload data lokal ke Firebase</button>
       <button class="btn" onclick="exportJSON()">⬇️ Export JSON (backup)</button>
       <button class="btn" onclick="exportCSV()">⬇️ Export CSV (buka di Excel/Sheets)</button>
       <button class="btn" onclick="document.getElementById('importFile').click()">⬆️ Import JSON</button>
@@ -205,23 +208,151 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
   </div>
 </div>
 
+<!-- Firebase SDK (compat, pinned 10.12.2). Jika CDN gagal dimuat, aplikasi tetap jalan di Mode Lokal. -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 "use strict";
-const LS_KEY="monzie-keuangan-v1", AUTH_KEY="monzie-keuangan-auth-v1";
+/* ============================================================
+   FIREBASE CONFIG — TEMPEL CONFIG ASLI DI SINI
+   Cara isi (lihat V2-README.md):
+     FIREBASE_API_KEY=... FIREBASE_AUTH_DOMAIN=... FIREBASE_PROJECT_ID=... \
+     FIREBASE_STORAGE_BUCKET=... FIREBASE_MESSAGING_SENDER_ID=... FIREBASE_APP_ID=... \
+     ./inject-firebase-config.sh
+   atau edit manual 6 nilai di bawah ini.
+   Selama apiKey / projectId masih kosong, aplikasi jalan di MODE LOKAL
+   (localStorage, perilaku v1) dan menampilkan banner "Mode lokal".
+   JANGAN menebak config — config asli hanya dari Firebase Console.
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBl6lQSwgLCbgMTza-21_Aj5PhN6DVYLIE",
+  authDomain: "rekapan-monzie.firebaseapp.com",
+  projectId: "rekapan-monzie",
+  storageBucket: "rekapan-monzie.firebasestorage.app",
+  messagingSenderId: "604881303900",
+  appId: "1:604881303900:web:71ca49fb9283a8a0786999"
+};
+/* Nama project Firebase yang diharapkan (untuk pengecekan manual): rekapan-monzie */
+
+const LS_KEY="monzie-keuangan-v1";
 const CATS={in:["Gaji","Jualan","Hadiah","Lainnya"],out:["Makan","Transport","Belanja","Tagihan","Hiburan","Lainnya"]};
 const DAY_NAMES=["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"];
 const MONTHS=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 
-function hash(s){let h=5381;for(let i=0;i<s.length;i++){h=((h<<5)+h+s.charCodeAt(i))>>>0}return "h"+h.toString(16)}
-function defaultPassHash(){return hash("monzie123")}
-function getAuth(){try{return JSON.parse(localStorage.getItem(AUTH_KEY))||{}}catch(e){return{}}}
-function isAdmin(){return sessionStorage.getItem("monzie-admin")==="1"}
+/* ---------- Firebase state ---------- */
+let fbApp=null, db=null, auth=null, fbUser=null;
+let MODE="local";            /* "local" | "firebase" */
+let fbConnected=false;       /* true setelah snapshot pertama berhasil */
+let preSyncLocal=null;       /* salinan data lokal sebelum listener Firestore menimpa txs */
+
+function firebaseConfigured(){return !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId);}
+
+function friendlyFbError(e){
+  const c=(e&&e.code)||"";
+  if(c==="auth/wrong-password"||c==="auth/invalid-credential") return "Email atau password salah.";
+  if(c==="auth/user-not-found") return "Email admin belum terdaftar di Firebase (Authentication).";
+  if(c==="auth/invalid-email") return "Format email tidak valid.";
+  if(c==="auth/too-many-requests") return "Terlalu banyak percobaan — coba lagi nanti.";
+  if(c==="auth/network-request-failed") return "Tidak ada koneksi internet.";
+  if(c==="auth/requires-recent-login") return "Sesi login sudah lama — logout lalu login lagi, baru ganti password.";
+  if(c==="permission-denied") return "Akses ditolak oleh aturan Firestore (hanya admin yang bisa menulis).";
+  if(c==="unavailable") return "Firebase tidak bisa dijangkau (offline / diblokir jaringan).";
+  return (e&&e.message)||"Terjadi kesalahan.";
+}
+
+function initFirebase(){
+  if(!firebaseConfigured() || typeof firebase==="undefined"){
+    MODE="local";
+    if(!firebaseConfigured()) console.info("[Rekapan] Firebase config kosong — Mode Lokal.");
+    else console.warn("[Rekapan] Firebase SDK gagal dimuat dari CDN — Mode Lokal.");
+    return;
+  }
+  try{
+    fbApp=firebase.initializeApp(FIREBASE_CONFIG);
+    db=firebase.firestore();
+    auth=firebase.auth();
+    MODE="firebase";
+    auth.onAuthStateChanged(function(u){ fbUser=u; updateRoleUI(); render(); });
+    startListener();
+  }catch(e){
+    console.warn("[Rekapan] Gagal inisialisasi Firebase, fallback Mode Lokal:", e);
+    MODE="local"; db=null; auth=null;
+  }
+}
+
+function startListener(){
+  try{
+    db.collection("transactions").orderBy("date").onSnapshot(function(snap){
+      txs=snap.docs.map(docToTx);
+      saveTxAll(txs); /* cache terakhir untuk mode offline */
+      fbConnected=true;
+      updateSyncBanner();
+      render();
+    }, function(err){
+      console.warn("[Rekapan] Firestore listener error:", err);
+      fbConnected=false;
+      updateSyncBanner();
+      render();
+    });
+  }catch(e){
+    console.warn("[Rekapan] Gagal memasang listener Firestore:", e);
+    fbConnected=false;
+  }
+}
+
+/* ---------- Pemetaan Firestore <-> aplikasi ----------
+   Firestore (collection "transactions", 1 dokumen per transaksi):
+     date: string "YYYY-MM-DD"
+     type: "pemasukan" | "pengeluaran"
+     category: string, amount: number (Rp), note: string
+     demo: boolean, createdAt/updatedAt: server timestamp
+   Di aplikasi, type dipakai sebagai "in" | "out" (sama seperti v1). */
+function docToTx(doc){
+  const d=doc.data()||{};
+  let created=Date.now();
+  if(d.createdAt && typeof d.createdAt.toMillis==="function") created=d.createdAt.toMillis();
+  else if(typeof d.createdAt==="number") created=d.createdAt;
+  const type=d.type==="pemasukan"?"in":d.type==="pengeluaran"?"out":(d.type==="in"?"in":d.type==="out"?"out":"out");
+  return {id:doc.id, date:d.date||"", type:type, category:d.category||"Lainnya",
+    amount:Number(d.amount)||0, note:d.note||"", demo:!!d.demo, createdAt:created};
+}
+function toFirestore(t){
+  return {date:t.date, type:t.type==="in"?"pemasukan":"pengeluaran", category:t.category,
+    amount:t.amount, note:t.note||"", demo:!!t.demo,
+    createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+}
+
+function updateSyncBanner(){
+  const b=document.getElementById("syncBanner");
+  const f=document.getElementById("syncFooter");
+  if(MODE==="firebase"){
+    if(!navigator.onLine){
+      b.textContent="📴 Offline — menampilkan data terakhir dari perangkat ini. Menulis data butuh koneksi internet.";
+    }else if(!fbConnected){
+      b.textContent="☁️ Menghubungkan ke Firebase…";
+    }else{
+      b.textContent="☁️ Tersinkron via Firebase — perubahan terlihat di semua perangkat.";
+    }
+    if(f) f.innerHTML="<b>Catatan penting:</b> Data tersinkron via Firebase — terlihat di semua perangkat. Publik bisa memantau tanpa login; hanya admin yang sudah login yang bisa tambah/edit/hapus.<br>Rekapan Monzie • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.";
+  }else{
+    b.textContent="📍 Mode lokal — sinkron belum aktif. Data hanya di perangkat ini. Isi konfigurasi Firebase untuk mengaktifkan sinkronisasi.";
+    if(f) f.innerHTML="<b>Catatan penting:</b> Data aplikasi ini tersimpan di perangkat ini saja (localStorage browser), belum ada sinkronisasi server karena konfigurasi Firebase belum diisi. Artinya, entri yang ditambahkan admin di satu perangkat <b>tidak otomatis terlihat</b> di perangkat lain.<br>Rekapan Monzie • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.";
+  }
+  const up=document.getElementById("uploadBtn");
+  if(up) up.disabled=(MODE!=="firebase");
+}
+
+/* ---------- Helpers (sama seperti v1) ---------- */
+function isAdmin(){ return MODE==="firebase" ? !!fbUser : false; }
 function parseDate(str){const p=str.split("-");return new Date(+p[0],+p[1]-1,+p[2])}
 function fmtDate(d){const p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())}
 function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const dow=(x.getDay()+6)%7;x.setDate(x.getDate()-dow);return x}
 function fmtRp(n){return "Rp "+Number(n||0).toLocaleString("id-ID")}
 function fmtShort(d){return d.getDate()+" "+MONTHS[d.getMonth()]+" "+d.getFullYear()}
 function uid(){return (crypto.randomUUID?crypto.randomUUID():"id-"+Date.now()+"-"+Math.random().toString(16).slice(2))}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 
 function seedDemo(){
   const demo=[
@@ -247,8 +378,10 @@ function loadTx(){
   try{const raw=localStorage.getItem(LS_KEY);if(raw){const arr=JSON.parse(raw);if(Array.isArray(arr))return arr}}catch(e){}
   const demo=seedDemo();localStorage.setItem(LS_KEY,JSON.stringify(demo));return demo;
 }
-function saveTxAll(arr){localStorage.setItem(LS_KEY,JSON.stringify(arr))}
+function saveTxAll(arr){try{localStorage.setItem(LS_KEY,JSON.stringify(arr))}catch(e){}}
+
 let txs=loadTx();
+preSyncLocal=txs.slice(); /* salinan sebelum listener Firestore (bila ada) menimpa txs */
 let weekStart=mondayOf(new Date());
 
 function weekTx(){
@@ -309,7 +442,6 @@ function render(){
   document.getElementById("demoNotice").style.display=hasDemo?"block":"none";
   updateRoleUI();
 }
-function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function updateRoleUI(){
   const admin=isAdmin();
   document.getElementById("roleBadge").textContent=admin?"🛡️ Mode Admin — bisa tambah/edit/hapus":"👁️ Mode Publik — hanya memantau";
@@ -322,21 +454,40 @@ function updateRoleUI(){
 function shiftWeek(n){weekStart.setDate(weekStart.getDate()+n*7);render()}
 function goThisWeek(){weekStart=mondayOf(new Date());render()}
 function jumpToWeek(v){if(!v)return;weekStart=mondayOf(parseDate(v));render()}
-function openLogin(){document.getElementById("loginErr").textContent="";document.getElementById("loginOverlay").classList.add("open");setTimeout(()=>document.getElementById("loginPass").focus(),50)}
+
+/* ---------- Auth (Firebase Email/Password; v1 admin/admin123 DIHAPUS) ---------- */
+function openLogin(){document.getElementById("loginErr").textContent="";document.getElementById("loginOverlay").classList.add("open");setTimeout(()=>document.getElementById("loginEmail").focus(),50)}
 function closeLogin(){document.getElementById("loginOverlay").classList.remove("open")}
-function doLogin(){
-  const u=document.getElementById("loginUser").value.trim();
-  const p=document.getElementById("loginPass").value;
-  const auth=getAuth();const expected=auth.passHash||defaultPassHash();
-  if(u==="admin"&&hash(p)===expected){sessionStorage.setItem("monzie-admin","1");closeLogin();render();}
-  else{document.getElementById("loginErr").textContent="Username atau password salah."}
+async function doLogin(){
+  const email=document.getElementById("loginEmail").value.trim();
+  const pass=document.getElementById("loginPass").value;
+  const errEl=document.getElementById("loginErr");
+  if(MODE!=="firebase"||!auth){
+    errEl.textContent="Mode lokal — sinkron belum aktif. Login admin hanya tersedia setelah konfigurasi Firebase diisi.";
+    return;
+  }
+  if(!email||!pass){errEl.textContent="Isi email dan password admin.";return}
+  errEl.textContent="Memeriksa…";
+  try{
+    await auth.signInWithEmailAndPassword(email,pass);
+    closeLogin(); render();
+  }catch(e){
+    errEl.textContent=friendlyFbError(e);
+  }
 }
-function logout(){sessionStorage.removeItem("monzie-admin");render()}
+function logout(){
+  if(auth) auth.signOut().catch(function(){});
+  fbUser=null;
+  render();
+}
+
+/* ---------- Transaksi ---------- */
 function syncCategories(){
   const type=document.getElementById("txType").value;
   document.getElementById("txCat").innerHTML=CATS[type].map(c=>`<option>${c}</option>`).join("");
 }
 function openTxForm(id){
+  if(!isAdmin()){alert("Login admin dulu.");return}
   document.getElementById("txErr").textContent="";
   syncCategories();
   if(id){
@@ -359,14 +510,28 @@ function openTxForm(id){
   document.getElementById("txOverlay").classList.add("open");
 }
 function closeTxForm(){document.getElementById("txOverlay").classList.remove("open")}
-function saveTx(){
+async function saveTx(){
   const id=document.getElementById("txId").value;
   const date=document.getElementById("txDate").value;
   const type=document.getElementById("txType").value;
   const category=document.getElementById("txCat").value;
   const amount=parseInt(document.getElementById("txAmount").value,10);
   const note=document.getElementById("txNote").value.trim();
-  if(!date||!amount||amount<=0){document.getElementById("txErr").textContent="Isi tanggal dan jumlah (lebih dari 0).";return}
+  const errEl=document.getElementById("txErr");
+  if(!date||!amount||amount<=0){errEl.textContent="Isi tanggal dan jumlah (lebih dari 0).";return}
+  if(!isAdmin()){errEl.textContent="Login admin dulu.";return}
+  if(MODE==="firebase"){
+    if(!navigator.onLine){errEl.textContent="Tidak ada koneksi internet — sambungkan dulu untuk menyimpan ke Firebase.";return}
+    const txId=id||uid();
+    const t={id:txId,date,type,category,amount,note,demo:false,createdAt:Date.now()};
+    try{
+      await db.collection("transactions").doc(txId).set(toFirestore(t),{merge:true});
+      const i=txs.findIndex(x=>x.id===txId); if(i>=0) txs[i]=t; else txs.push(t);
+      saveTxAll(txs); closeTxForm(); render();
+    }catch(e){errEl.textContent="Gagal menyimpan: "+friendlyFbError(e);}
+    return;
+  }
+  /* Mode lokal — perilaku v1 */
   if(id){
     const t=txs.find(x=>x.id===id);if(t){Object.assign(t,{date,type,category,amount,note});}
   }else{
@@ -374,20 +539,52 @@ function saveTx(){
   }
   saveTxAll(txs);closeTxForm();render();
 }
-function deleteTx(id){
+async function deleteTx(id){
   const t=txs.find(x=>x.id===id);
   if(!t)return;
+  if(!isAdmin()){alert("Login admin dulu.");return}
   if(!confirm("Hapus transaksi "+t.category+" "+fmtRp(t.amount)+" ("+(t.note||"tanpa catatan")+")?"))return;
+  if(MODE==="firebase"){
+    if(!navigator.onLine){alert("Tidak ada koneksi internet — hapus butuh koneksi ke Firebase.");return}
+    try{
+      await db.collection("transactions").doc(id).delete();
+      txs=txs.filter(x=>x.id!==id); saveTxAll(txs); render();
+    }catch(e){alert("Gagal menghapus: "+friendlyFbError(e));}
+    return;
+  }
   txs=txs.filter(x=>x.id!==id);saveTxAll(txs);render();
 }
-function openSettings(){document.getElementById("settingsErr").textContent="";document.getElementById("settingsOverlay").classList.add("open")}
+
+/* ---------- Pengaturan Admin ---------- */
+function openSettings(){document.getElementById("settingsErr").textContent="";document.getElementById("settingsOverlay").classList.add("open");updateSyncBanner()}
 function closeSettings(){document.getElementById("settingsOverlay").classList.remove("open")}
-function changePassword(){
+async function changePassword(){
   const p=document.getElementById("newPass").value;
-  if(!p||p.length<6){document.getElementById("settingsErr").textContent="Password baru minimal 6 karakter.";return}
-  const auth=getAuth();auth.passHash=hash(p);localStorage.setItem(AUTH_KEY,JSON.stringify(auth));
-  document.getElementById("newPass").value="";
-  document.getElementById("settingsErr").textContent="✅ Password berhasil diganti.";
+  const msg=document.getElementById("settingsErr");
+  if(!p||p.length<6){msg.textContent="Password baru minimal 6 karakter.";return}
+  if(MODE!=="firebase"||!fbUser){msg.textContent="Mode lokal — ganti password hanya tersedia setelah login Firebase.";return}
+  try{
+    await fbUser.updatePassword(p);
+    document.getElementById("newPass").value="";
+    msg.textContent="✅ Password berhasil diganti.";
+  }catch(e){
+    msg.textContent=friendlyFbError(e);
+  }
+}
+async function uploadLocalToFirebase(){
+  const msg=document.getElementById("settingsErr");
+  if(MODE!=="firebase"){msg.textContent="Mode lokal — sinkron belum aktif. Isi konfigurasi Firebase dulu.";return}
+  if(!isAdmin()){msg.textContent="Login admin dulu.";return}
+  if(!navigator.onLine){msg.textContent="Tidak ada koneksi internet.";return}
+  const src=(preSyncLocal&&preSyncLocal.length?preSyncLocal:txs);
+  if(!src.length){msg.textContent="Tidak ada data lokal untuk di-upload.";return}
+  msg.textContent="Meng-upload "+src.length+" transaksi…";
+  let ok=0, fail=0;
+  for(const t of src){
+    try{ await db.collection("transactions").doc(t.id).set(toFirestore(t),{merge:true}); ok++; }
+    catch(e){ fail++; }
+  }
+  msg.textContent="✅ Upload selesai: "+ok+" berhasil"+(fail?", "+fail+" gagal":"")+". Data lokal kini tersinkron (duplikat dicegah lewat ID dokumen).";
 }
 function download(name,content,type){
   const a=document.createElement("a");
@@ -400,29 +597,66 @@ function exportCSV(){
   txs.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(t=>rows.push([t.date,t.type==="in"?"Pemasukan":"Pengeluaran",t.category,t.amount,'"'+(t.note||"").replace(/"/g,'""')+'"']));
   download("rekapan-monzie.csv",rows.map(r=>r.join(",")).join("\n"),"text/csv");
 }
-function importJSON(ev){
+async function importJSON(ev){
   const f=ev.target.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=()=>{
+  r.onload=async function(){
     try{
       const arr=JSON.parse(r.result);
       if(!Array.isArray(arr)||!arr.every(t=>t.date&&t.type&&t.category&&typeof t.amount==="number"))throw new Error("format");
-      txs=arr.map(t=>({id:t.id||uid(),date:t.date,type:t.type,category:t.category,amount:t.amount,note:t.note||"",demo:!!t.demo,createdAt:t.createdAt||Date.now()}));
-      saveTxAll(txs);closeSettings();render();alert("Import berhasil: "+txs.length+" transaksi.");
+      const norm=arr.map(t=>({id:t.id||uid(),date:t.date,type:(t.type==="pemasukan"?"in":t.type==="pengeluaran"?"out":t.type),category:t.category,amount:t.amount,note:t.note||"",demo:!!t.demo,createdAt:t.createdAt||Date.now()}));
+      if(MODE==="firebase"){
+        if(!isAdmin()){alert("Login admin dulu.");return}
+        if(!navigator.onLine){alert("Tidak ada koneksi internet.");return}
+        for(const t of norm){ await db.collection("transactions").doc(t.id).set(toFirestore(t),{merge:true}); }
+        closeSettings(); alert("Import ke Firebase berhasil: "+norm.length+" transaksi.");
+      }else{
+        txs=norm; saveTxAll(txs); closeSettings(); render(); alert("Import berhasil: "+txs.length+" transaksi.");
+      }
     }catch(e){alert("File JSON tidak valid.");}
   };
   r.readAsText(f);ev.target.value="";
 }
-function clearDemo(){
+async function clearDemo(){
   if(!confirm("Hapus semua data contoh? Transaksi asli (bukan contoh) tetap ada."))return;
+  if(MODE==="firebase"){
+    if(!isAdmin()){alert("Login admin dulu.");return}
+    if(!navigator.onLine){alert("Tidak ada koneksi internet.");return}
+    const demos=txs.filter(t=>t.demo);
+    try{
+      for(const t of demos){ await db.collection("transactions").doc(t.id).delete(); }
+      txs=txs.filter(t=>!t.demo); saveTxAll(txs); render();
+    }catch(e){alert("Gagal menghapus data contoh: "+friendlyFbError(e));}
+    return;
+  }
   txs=txs.filter(t=>!t.demo);saveTxAll(txs);render();
 }
-function clearAll(){
+async function clearAll(){
   if(!confirm("HAPUS SEMUA data transaksi? Tindakan ini tidak bisa dibatalkan. Export dulu kalau perlu."))return;
+  if(MODE==="firebase"){
+    if(!isAdmin()){alert("Login admin dulu.");return}
+    if(!navigator.onLine){alert("Tidak ada koneksi internet.");return}
+    try{
+      let batch=db.batch(), n=0;
+      for(const t of txs){
+        batch.delete(db.collection("transactions").doc(t.id));
+        if(++n>=400){ await batch.commit(); batch=db.batch(); n=0; }
+      }
+      if(n) await batch.commit();
+      txs=[]; saveTxAll(txs); render();
+    }catch(e){alert("Gagal menghapus: "+friendlyFbError(e));}
+    return;
+  }
   txs=[];saveTxAll(txs);render();
 }
+
+/* ---------- Init ---------- */
 syncCatFilter();
+initFirebase();
+updateSyncBanner();
 render();
+window.addEventListener("online",function(){updateSyncBanner();render();});
+window.addEventListener("offline",function(){updateSyncBanner();render();});
 </script>
 </body>
 </html>

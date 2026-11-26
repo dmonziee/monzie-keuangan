@@ -241,6 +241,7 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
     belum ada sinkronisasi server karena konfigurasi Firebase belum diisi. Artinya, entri yang ditambahkan admin di satu perangkat
     <b>tidak otomatis terlihat</b> di perangkat lain.
     <br>KAS KEUANGAN • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.
+    <br>Proyek open-source oleh <a href="https://github.com/dmonziee" target="_blank" rel="noopener">@dmonziee</a> — kode sumber: <a href="https://github.com/dmonziee/monzie-keuangan" target="_blank" rel="noopener">github.com/dmonziee/monzie-keuangan</a>.
   </footer>
 </div>
 
@@ -498,10 +499,10 @@ function updateSyncBanner(){
     }else{
       b.textContent="☁️ Tersinkron via Firebase — perubahan terlihat di semua perangkat.";
     }
-    if(f) f.innerHTML="<b>Catatan penting:</b> Data tersinkron via Firebase — terlihat di semua perangkat. Publik bisa memantau tanpa login; hanya admin yang sudah login yang bisa tambah/edit/hapus.<br>KAS KEUANGAN • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.";
+    if(f) f.innerHTML="<b>Catatan penting:</b> Data tersinkron via Firebase — terlihat di semua perangkat. Publik bisa memantau tanpa login; hanya admin yang sudah login yang bisa tambah/edit/hapus.<br>KAS KEUANGAN • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.<br>Proyek open-source oleh <a href='https://github.com/dmonziee' target='_blank' rel='noopener'>@dmonziee</a> — kode sumber: <a href='https://github.com/dmonziee/monzie-keuangan' target='_blank' rel='noopener'>github.com/dmonziee/monzie-keuangan</a>.";
   }else{
     b.textContent="📍 Mode lokal — sinkron belum aktif. Data hanya di perangkat ini. Isi konfigurasi Firebase untuk mengaktifkan sinkronisasi.";
-    if(f) f.innerHTML="<b>Catatan penting:</b> Data aplikasi ini tersimpan di perangkat ini saja (localStorage browser), belum ada sinkronisasi server karena konfigurasi Firebase belum diisi. Artinya, entri yang ditambahkan admin di satu perangkat <b>tidak otomatis terlihat</b> di perangkat lain.<br>KAS KEUANGAN • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.";
+    if(f) f.innerHTML="<b>Catatan penting:</b> Data aplikasi ini tersimpan di perangkat ini saja (localStorage browser), belum ada sinkronisasi server karena konfigurasi Firebase belum diisi. Artinya, entri yang ditambahkan admin di satu perangkat <b>tidak otomatis terlihat</b> di perangkat lain.<br>KAS KEUANGAN • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.<br>Proyek open-source oleh <a href='https://github.com/dmonziee' target='_blank' rel='noopener'>@dmonziee</a> — kode sumber: <a href='https://github.com/dmonziee/monzie-keuangan' target='_blank' rel='noopener'>github.com/dmonziee/monzie-keuangan</a>.";
   }
   const up=document.getElementById("uploadBtn");
   if(up) up.disabled=(MODE!=="firebase");

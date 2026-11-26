@@ -8,37 +8,80 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
 <style>
 :root{
-  --bg:#0f172a; --card:#1e293b; --card2:#273449; --text:#f1f5f9; --muted:#94a3b8;
-  --green:#22c55e; --green-bg:rgba(34,197,94,.14); --red:#ef4444; --red-bg:rgba(239,68,68,.14);
-  --blue:#38bdf8; --amber:#f59e0b; --border:#334155; --radius:14px;
+  --bg:#F7EFE8; --cream:#FFF9F3; --cream2:#FBF6F0; --ink:#2E1B12; --brown:#3B241A;
+  --terra:#D96F4E; --terra-deep:#BC5236; --muted:#8A7364; --line:#EBDCD0; --line2:#E5D5C6;
+  --green:#2E7D5B; --green-bg:rgba(46,125,91,.12); --red:#C0522F; --red-bg:rgba(192,82,47,.12);
+  --blue:#3B6EA5; --amber:#B7791F; --radius:22px;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-a{color:var(--blue)}
-.wrap{max-width:720px;margin:0 auto;padding:16px 14px 48px}
-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px}
-h1{font-size:26px;margin:0;line-height:1.15}
-.subtitle{color:var(--muted);margin:4px 0 0;font-size:14px}
-.badge{display:inline-block;font-size:12px;padding:3px 9px;border-radius:999px;background:var(--card2);color:var(--muted);margin-top:6px}
-.badge.admin{background:var(--green-bg);color:var(--green)}
-.btn{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:10px;padding:9px 14px;font-size:14px;cursor:pointer}
-.btn:hover{background:var(--card2)}
-.btn.primary{background:#16a34a;border-color:#16a34a;color:#fff;font-weight:600}
-.btn.danger{background:var(--red-bg);border-color:var(--red);color:#fca5a5}
-.btn.small{padding:5px 10px;font-size:13px}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+a{color:var(--terra-deep)}
+.wrap{max-width:720px;margin:0 auto;padding:14px 16px 48px}
+/* ---------- top bar ---------- */
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 2px 4px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo-tile{flex:0 0 auto;width:44px;height:44px;border-radius:14px;background:var(--terra);color:#3B241A;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(217,111,78,.35)}
+.logo-tile svg{width:26px;height:26px}
+.brand-name{font-weight:800;font-size:17px;letter-spacing:2.5px;white-space:nowrap}
+.top-actions{display:flex;align-items:center;gap:8px}
+.date-pill{background:var(--cream);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:12px;color:var(--muted);letter-spacing:.4px;white-space:nowrap;box-shadow:0 2px 8px rgba(46,27,18,.05)}
+.date-pill b{color:var(--ink);font-weight:700}
+.btn{border:1px solid var(--line);background:var(--cream);color:var(--ink);border-radius:14px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--cream2)}
+.btn.primary{background:var(--brown);border-color:var(--brown);color:#FBF6F0;font-weight:700}
+.btn.primary:hover{background:#4A2E20}
+.btn.terra{background:var(--terra);border-color:var(--terra);color:#3B241A;font-weight:800;letter-spacing:.6px}
+.btn.terra:hover{background:#E07856}
+.btn.danger{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.btn.small{padding:6px 12px;font-size:13px;border-radius:10px}
+.btn.pill{border-radius:999px;padding:8px 16px}
 .btn:disabled{opacity:.5;cursor:default}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:14px}
+/* ---------- page head ---------- */
+.page-head{padding:14px 2px 2px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
+h1{font-size:36px;margin:8px 0 0;line-height:1.1;font-weight:800;letter-spacing:-.5px}
+.subtitle{color:var(--muted);margin:8px 0 0;font-size:15px;line-height:1.5}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;background:var(--cream);border:1px solid var(--line);color:var(--muted);margin-top:12px}
+.badge.admin{background:var(--green-bg);color:var(--green);border-color:transparent}
+/* ---------- cards ---------- */
+.card{background:var(--cream);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-top:16px;box-shadow:0 4px 18px rgba(46,27,18,.05)}
+.card h2,.section-head h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.3px}
+.section-head{padding:26px 2px 0}
+.section-head p{color:var(--muted);margin:6px 0 0;font-size:14px}
 .weeknav{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.weeknav .label{font-weight:700;font-size:16px;text-align:center}
-.weeknav .sub{font-size:12px;color:var(--muted);text-align:center}
+.weeknav>div{flex:1;min-width:0}
+.weeknav .btn{white-space:nowrap;padding:9px 10px;font-size:13px}
+.weeknav .label{font-weight:800;font-size:15px;text-align:center}
+.weeknav .sub{font-size:11px;color:var(--muted);text-align:center;margin-top:2px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .row>*{flex:1;min-width:120px}
-.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-.sum{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
-.sum .lbl{font-size:13px;color:var(--muted)}
-.sum .val{font-size:20px;font-weight:800;margin-top:4px;word-break:break-word}
-.sum .cnt{font-size:12px;color:var(--muted);margin-top:2px}
+/* ---------- saldo card (dark brown) ---------- */
+.saldo-card{position:relative;overflow:hidden;background:linear-gradient(135deg,#2E1B12 0%,#3B241A 70%,#4A2C1C 100%);border-radius:28px;padding:24px 22px 22px;margin-top:18px;color:#FBF6F0;box-shadow:0 14px 32px rgba(46,27,18,.28)}
+.saldo-card::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;border:34px solid rgba(251,246,240,.05);right:-190px;top:-210px}
+.saldo-card::after{content:"";position:absolute;width:300px;height:300px;border-radius:50%;border:26px solid rgba(217,111,78,.12);left:-140px;bottom:-190px}
+.saldo-deco{position:absolute;right:-4px;bottom:52px;width:138px;height:100px;color:rgba(217,111,78,.3);pointer-events:none}
+.saldo-deco svg{width:100%;height:100%}
+.saldo-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:3px;color:rgba(251,246,240,.75);position:relative;z-index:1}
+.dot-live{width:9px;height:9px;border-radius:50%;background:var(--terra);display:inline-block}
+.saldo-card .val{font-size:44px;font-weight:800;margin:12px 0 0;letter-spacing:-1px;position:relative;z-index:1}
+.saldo-card .val.in{color:#FBF6F0}
+.saldo-card .val.out{color:#F6A58D}
+.saldo-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1}
+.pill-count{background:rgba(251,246,240,.12);border:1px solid rgba(251,246,240,.25);border-radius:999px;padding:7px 12px;font-size:13px;color:#FBF6F0}
+.saldo-range{font-size:13px;color:rgba(251,246,240,.65)}
+.saldo-card .btn.terra{margin-top:18px;position:relative;z-index:1;padding:13px 20px;border-radius:14px;font-size:14px}
+/* ---------- summary cards ---------- */
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.sum{background:var(--cream);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 4px 18px rgba(46,27,18,.05)}
+.sum .lbl{font-size:12px;font-weight:700;letter-spacing:1.2px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.arrow-ico{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.arrow-ico.up{background:var(--green-bg);color:var(--green)}
+.arrow-ico.down{background:var(--red-bg);color:var(--red)}
+.arrow-ico svg{width:15px;height:15px}
+.sum .val{font-size:22px;font-weight:800;margin-top:10px;word-break:break-word}
+.sum .cnt{font-size:12px;color:var(--muted);margin-top:4px}
 .in{color:var(--green)} .out{color:var(--red)}
+/* ---------- chart ---------- */
 .chart{display:flex;align-items:flex-end;gap:6px;height:150px;padding-top:8px}
 .day{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
 .bars{display:flex;gap:3px;align-items:flex-end;height:120px}
@@ -47,56 +90,99 @@ h1{font-size:26px;margin:0;line-height:1.15}
 .dayname{font-size:11px;color:var(--muted)}
 .legend{font-size:12px;color:var(--muted);display:flex;gap:14px;margin-top:8px}
 .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.filters select,.filters input{flex:1;min-width:110px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 10px;font-size:14px}
-.txgroup{margin-top:16px}
-.txgroup h3{margin:0 0 8px;font-size:14px;color:var(--muted)}
-.tx{display:flex;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px}
+/* ---------- filters & list ---------- */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.filters select,.filters input{flex:1;min-width:110px;background:var(--cream);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:11px 12px;font-size:14px}
+.txgroup{margin-top:18px}
+.txgroup h3{margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.tx{display:flex;justify-content:space-between;gap:10px;background:var(--cream);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:8px;box-shadow:0 2px 10px rgba(46,27,18,.04)}
 .tx .cat{font-weight:700;font-size:14px}
 .tx .note{font-size:13px;color:var(--muted);margin-top:2px;word-break:break-word}
-.tx .amt{font-weight:800;white-space:nowrap;text-align:right}
-.tx .acts{margin-top:6px;display:flex;gap:6px;justify-content:flex-end}
+.tx .amt{font-weight:800;white-space:nowrap;text-align:right;font-size:15px}
+.tx .acts{margin-top:8px;display:flex;gap:6px;justify-content:flex-end}
 .empty{color:var(--muted);text-align:center;padding:24px 0}
-.notice{background:rgba(245,158,11,.12);border:1px solid var(--amber);color:#fcd34d;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:14px}
-.notice.sync{background:rgba(56,189,248,.10);border-color:var(--blue);color:#bae6fd}
-footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-top:1px solid var(--border);padding-top:14px}
-/* modal */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:flex-start;justify-content:center;padding:20px 12px;z-index:50}
+.notice{background:#FDF3E7;border:1px solid #F0D9B5;color:#8A5A1F;border-radius:16px;padding:12px 14px;font-size:13px;line-height:1.5;margin-top:14px}
+.notice.sync{background:#FDEEE6;border-color:#F3C9B4;color:#8A4A2E}
+footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-top:1px solid var(--line);padding-top:14px}
+/* ---------- modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(46,27,18,.55);display:none;align-items:flex-start;justify-content:center;padding:20px 12px;z-index:50}
 .overlay.open{display:flex}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;width:100%;max-width:440px;max-height:90vh;overflow:auto}
-.modal h2{margin:0 0 12px;font-size:19px}
-.modal label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
-.modal input,.modal select,.modal textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px;font-size:15px}
-.modal .actions{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
-.err{color:#fca5a5;font-size:13px;margin-top:8px;min-height:16px}
+.modal{background:var(--cream);border:1px solid var(--line);border-radius:24px;padding:22px;width:100%;max-width:440px;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(46,27,18,.3)}
+.modal h2{margin:0 0 12px;font-size:22px;font-weight:800}
+.modal label{display:block;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+.modal input,.modal select,.modal textarea{width:100%;background:var(--cream2);border:1px solid var(--line2);color:var(--ink);border-radius:14px;padding:13px 14px;font-size:15px}
+.modal .actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.err{color:var(--red);font-size:13px;margin-top:8px;min-height:16px}
 .settings-list{display:grid;gap:8px}
 .settings-list .btn{text-align:left}
 .hidden{display:none!important}
-/* toast (pengganti alert native) + confirm modal (pengganti confirm native) */
-.toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:20px;background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:12px;padding:12px 16px;font-size:14px;max-width:92vw;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+/* ---------- toast (pengganti alert native) + confirm modal (pengganti confirm native) ---------- */
+.toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:20px;background:var(--brown);border:1px solid var(--brown);color:#FBF6F0;border-radius:14px;padding:13px 18px;font-size:14px;font-weight:600;max-width:92vw;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:0 10px 28px rgba(46,27,18,.35)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.err{border-color:var(--red);color:#fecaca}
+.toast.err{background:#7A2E1B;border-color:#7A2E1B;color:#FDE8E0}
+/* ---------- login page (full-screen, gaya screenshot 1) ---------- */
+#loginOverlay{display:none;position:fixed;inset:0;z-index:50;overflow-y:auto;background:#2B1A12}
+#loginOverlay.open{display:block}
+.login-page{position:relative;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:38px 20px 30px;overflow:hidden;background:radial-gradient(120% 55% at 85% 0%,rgba(217,111,78,.22),transparent 60%),radial-gradient(90% 50% at 0% 100%,rgba(217,111,78,.14),transparent 55%),#2B1A12}
+.login-page::before{content:"";position:absolute;width:640px;height:640px;border-radius:50%;border:44px solid rgba(251,246,240,.045);top:-300px;right:-330px;pointer-events:none}
+.login-page::after{content:"";position:absolute;width:520px;height:520px;border-radius:50%;border:36px solid rgba(251,246,240,.04);bottom:-280px;left:-260px;pointer-events:none}
+.login-brand{position:relative;z-index:1;display:flex;align-items:center;gap:14px;margin-bottom:26px}
+.login-brand .logo-tile{width:64px;height:64px;border-radius:20px}
+.login-brand .logo-tile svg{width:36px;height:36px}
+.login-brand .brand-name{color:#FBF6F0;font-size:27px;letter-spacing:3px}
+.login-brand .brand-sub{color:rgba(251,246,240,.6);font-size:12px;letter-spacing:4px;margin-top:4px}
+.login-card{position:relative;z-index:1;background:var(--cream);border-radius:28px;padding:28px 24px;width:100%;max-width:440px;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.login-card .eyebrow{font-size:12px}
+.login-card h2{font-size:30px;font-weight:800;margin:10px 0 0;letter-spacing:-.5px}
+.login-card .login-sub{color:var(--muted);font-size:14px;line-height:1.55;margin:10px 0 0}
+.login-card label{display:block;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:20px 0 8px}
+.login-card input{width:100%;background:var(--cream2);border:1px solid var(--line2);color:var(--ink);border-radius:16px;padding:16px;font-size:16px}
+.login-card input:focus{outline:2px solid var(--terra);outline-offset:1px;border-color:var(--terra)}
+.login-card .btn.primary{width:100%;margin-top:24px;padding:16px;border-radius:16px;font-size:15px;letter-spacing:2px}
+.login-public{display:block;text-align:center;margin-top:16px;font-size:14px;color:var(--terra-deep);font-weight:600;cursor:pointer;background:none;border:0;padding:6px;width:100%}
+.login-public:hover{text-decoration:underline}
+.login-note{font-size:12px;color:var(--muted);line-height:1.5;text-align:center;margin:14px 0 0}
+.login-foot{position:relative;z-index:1;margin-top:28px;text-align:center;color:rgba(251,246,240,.55);font-size:13px;line-height:1.9}
+.login-foot .foot-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--terra);margin-right:8px;vertical-align:middle}
+.login-foot .foot-brand{letter-spacing:2.5px;font-size:12px;font-weight:600}
+@media (max-width:480px){
+  h1{font-size:32px}
+  .date-pill .pill-label{display:none}
+  .date-pill{padding:7px 10px;font-size:11px}
+  .brand-name{font-size:14px;letter-spacing:1.5px}
+  .logo-tile{width:40px;height:40px}
+  .btn.pill{padding:8px 12px;font-size:13px}
+  .saldo-card .val{font-size:38px}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div>
-      <h1>KAS KEUANGAN</h1>
-      <p class="subtitle">Pemasukan &amp; Pengeluaran Mingguan</p>
-      <span class="badge" id="roleBadge">👁️ Mode Publik — hanya memantau</span>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo-tile" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 1 0-4h13v4"/><path d="M20 7v2a2 2 0 0 1-2 2H6a2 2 0 0 0-2 2v7a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-9a2 2 0 0 0-2-2z"/><path d="M16 13h.01"/><path d="M17 11V7"/></svg></span>
+      <span class="brand-name">KAS KEUANGAN</span>
     </div>
-    <div>
-      <button class="btn" id="loginBtn" onclick="openLogin()">🔐 Login Admin</button>
-      <button class="btn hidden" id="logoutBtn" onclick="logout()">Keluar</button>
+    <div class="top-actions">
+      <span class="date-pill"><span class="pill-label">HARI INI&nbsp;</span><b id="todayPill">—</b></span>
+      <button class="btn pill" id="loginBtn" onclick="openLogin()">Masuk</button>
+      <button class="btn pill hidden" id="logoutBtn" onclick="logout()">Keluar</button>
     </div>
   </header>
+
+  <section class="page-head">
+    <div class="eyebrow">Pusat Kendali Keuangan</div>
+    <h1>Ringkasan Kas</h1>
+    <p class="subtitle">Pantau pemasukan, pengeluaran, dan saldo Anda.</p>
+    <span class="badge" id="roleBadge">👁️ Mode Publik — hanya memantau</span>
+  </section>
 
   <div class="notice sync" id="syncBanner">📍 Mode lokal — sinkron belum aktif.</div>
 
   <div class="notice" id="demoNotice">📌 Menampilkan <b>data contoh</b> minggu ini. Admin bisa menghapusnya di Pengaturan.</div>
 
   <div class="card">
+    <div class="eyebrow" style="margin-bottom:12px">Periode · Mingguan</div>
     <div class="weeknav">
       <button class="btn" onclick="shiftWeek(-1)" aria-label="Minggu sebelumnya">‹ Sebelumnya</button>
       <div>
@@ -107,15 +193,29 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
     </div>
     <div class="row" style="margin-top:12px">
       <button class="btn" onclick="goThisWeek()">📅 Minggu Ini</button>
-      <input type="date" id="weekPicker" onchange="jumpToWeek(this.value)" style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 10px;font-size:14px" title="Lompat ke minggu">
+      <input type="date" id="weekPicker" onchange="jumpToWeek(this.value)" style="background:var(--cream2);border:1px solid var(--line2);color:var(--ink);border-radius:14px;padding:10px;font-size:14px" title="Lompat ke minggu">
     </div>
   </div>
 
+  <div class="saldo-card">
+    <div class="saldo-deco" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 1 0-4h13v4"/><path d="M20 7v2a2 2 0 0 1-2 2H6a2 2 0 0 0-2 2v7a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-9a2 2 0 0 0-2-2z"/><path d="M16 13h.01"/></svg></div>
+    <div class="saldo-label"><span class="dot-live"></span> TOTAL SALDO</div>
+    <div class="val" id="sumBal">Rp 0</div>
+    <div class="saldo-meta">
+      <span class="pill-count"><b id="sumCnt">0</b> transaksi tercatat</span>
+      <span class="saldo-range" id="sumRange">—</span>
+    </div>
+    <button class="btn terra hidden" id="addBtn" onclick="openTxForm()">+ CATAT TRANSAKSI</button>
+  </div>
+
   <div class="summary">
-    <div class="sum"><div class="lbl">💰 Pemasukan</div><div class="val in" id="sumIn">Rp 0</div><div class="cnt" id="cntIn">0 transaksi</div></div>
-    <div class="sum"><div class="lbl">💸 Pengeluaran</div><div class="val out" id="sumOut">Rp 0</div><div class="cnt" id="cntOut">0 transaksi</div></div>
-    <div class="sum"><div class="lbl">⚖️ Saldo Minggu</div><div class="val" id="sumBal">Rp 0</div><div class="cnt">pemasukan − pengeluaran</div></div>
-    <div class="sum"><div class="lbl">🧾 Total Transaksi</div><div class="val" id="sumCnt">0</div><div class="cnt" id="sumRange">—</div></div>
+    <div class="sum"><div class="lbl"><span class="arrow-ico up" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg></span> TOTAL PEMASUKAN</div><div class="val in" id="sumIn">Rp 0</div><div class="cnt" id="cntIn">0 transaksi</div></div>
+    <div class="sum"><div class="lbl"><span class="arrow-ico down" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></span> TOTAL PENGELUARAN</div><div class="val out" id="sumOut">Rp 0</div><div class="cnt" id="cntOut">0 transaksi</div></div>
+  </div>
+
+  <div class="section-head">
+    <h2>Transaksi &amp; Pencatatan</h2>
+    <p>Kelola pemasukan dan pengeluaran bersama.</p>
   </div>
 
   <div class="card">
@@ -131,7 +231,6 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
   </div>
 
   <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-    <button class="btn primary hidden" id="addBtn" onclick="openTxForm()">＋ Tambah Transaksi</button>
     <button class="btn hidden" id="settingsBtn" onclick="openSettings()">⚙️ Pengaturan Admin</button>
   </div>
 
@@ -145,20 +244,33 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
   </footer>
 </div>
 
-<!-- Login modal -->
-<div class="overlay" id="loginOverlay">
-  <div class="modal">
-    <h2>Login Admin</h2>
-    <label>Email admin</label>
-    <input id="loginEmail" type="email" placeholder="kingmusang578@gmail.com" autocomplete="username">
-    <label>Password</label>
-    <input id="loginPass" type="password" placeholder="Password admin" autocomplete="current-password">
-    <div class="err" id="loginErr"></div>
-    <div class="actions">
-      <button class="btn" onclick="closeLogin()">Batal</button>
-      <button class="btn primary" onclick="doLogin()">Masuk</button>
+<!-- Login page (full-screen, bukan modal kecil) -->
+<div id="loginOverlay">
+  <div class="login-page">
+    <div class="login-brand">
+      <span class="logo-tile" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 1 0-4h13v4"/><path d="M20 7v2a2 2 0 0 1-2 2H6a2 2 0 0 0-2 2v7a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-9a2 2 0 0 0-2-2z"/><path d="M16 13h.01"/><path d="M17 11V7"/></svg></span>
+      <span>
+        <span class="brand-name">KAS KEUANGAN</span>
+        <span class="brand-sub" style="display:block">KAS &amp; ARUS UANG</span>
+      </span>
     </div>
-    <p style="font-size:12px;color:var(--muted)">Login dengan email admin Firebase (dibuat di Firebase Console → Authentication). Publik tidak perlu login — cukup buka aplikasi untuk memantau.</p>
+    <div class="login-card">
+      <div class="eyebrow">Akses Pengelola</div>
+      <h2>Masuk ke aplikasi</h2>
+      <p class="login-sub">Masukkan email dan kata sandi admin untuk membuka ringkasan kas KAS KEUANGAN.</p>
+      <label for="loginEmail">Email</label>
+      <input id="loginEmail" type="email" placeholder="kingmusang578@gmail.com" autocomplete="username">
+      <label for="loginPass">Kata Sandi</label>
+      <input id="loginPass" type="password" placeholder="Masukkan kata sandi" autocomplete="current-password">
+      <div class="err" id="loginErr"></div>
+      <button class="btn primary" onclick="doLogin()">MASUK</button>
+      <button class="login-public" onclick="closeLogin()">Lihat ringkasan publik →</button>
+      <p class="login-note">Publik tidak perlu login — ringkasan kas bisa dipantau siapa saja, hanya admin yang bisa tambah, edit, dan hapus.</p>
+    </div>
+    <div class="login-foot">
+      <div><span class="foot-dot"></span>Catatan pemasukan &amp; pengeluaran, satu jejak setiap transaksi</div>
+      <div class="foot-brand">KAS KEUANGAN · AKSES TERJAGA</div>
+    </div>
   </div>
 </div>
 
@@ -453,8 +565,9 @@ function syncCatFilter(){
 }
 function render(){
   const end=new Date(weekStart);end.setDate(end.getDate()+6);
-  document.getElementById("weekLabel").textContent=fmtShort(weekStart)+" – "+fmtShort(end);
-  document.getElementById("weekSub").textContent="Minggu "+DAY_NAMES[0]+"–"+DAY_NAMES[6]+", "+weekStart.getFullYear();
+  const sameMonth=weekStart.getMonth()===end.getMonth()&&weekStart.getFullYear()===end.getFullYear();
+  document.getElementById("weekLabel").textContent=sameMonth?weekStart.getDate()+" – "+fmtShort(end):fmtShort(weekStart)+" – "+fmtShort(end);
+  document.getElementById("weekSub").textContent="Senin – Minggu";
   const w=weekTx();
   const tin=w.filter(t=>t.type==="in").reduce((a,t)=>a+t.amount,0);
   const tout=w.filter(t=>t.type==="out").reduce((a,t)=>a+t.amount,0);
@@ -711,8 +824,14 @@ async function clearAll(){
   showToast("Semua data transaksi dihapus.");
 }
 
+function setTodayPill(){
+  const el=document.getElementById("todayPill");
+  if(el) el.textContent=fmtShort(new Date());
+}
+
 /* ---------- Init ---------- */
 syncCatFilter();
+setTodayPill();
 initFirebase();
 updateSyncBanner();
 render();

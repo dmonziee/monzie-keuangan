@@ -72,6 +72,10 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
 .settings-list{display:grid;gap:8px}
 .settings-list .btn{text-align:left}
 .hidden{display:none!important}
+/* toast (pengganti alert native) + confirm modal (pengganti confirm native) */
+.toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:20px;background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:12px;padding:12px 16px;font-size:14px;max-width:92vw;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{border-color:var(--red);color:#fecaca}
 </style>
 </head>
 <body>
@@ -208,6 +212,23 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
   </div>
 </div>
 
+<!-- Confirm modal (pengganti dialog konfirmasi native) + toast (pengganti alert native).
+     Alasan: di WebView Android, dialog native hanya muncul kalau WebView
+     dipasangi WebChromeClient. Tanpa itu, confirm native langsung
+     mengembalikan false dan dialog tidak pernah tampil — tombol Hapus jadi
+     diam saja. Modal/toast in-app ini bekerja di browser mana pun. -->
+<div class="overlay" id="confirmOverlay" onclick="if(event.target===this)closeConfirm(false)">
+  <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h2 id="confirmTitle">Hapus?</h2>
+    <p id="confirmMsg" style="color:var(--muted);font-size:14px;line-height:1.5;margin:0"></p>
+    <div class="actions">
+      <button class="btn" id="confirmCancelBtn" onclick="closeConfirm(false)">Batal</button>
+      <button class="btn danger" id="confirmOkBtn" onclick="closeConfirm(true)">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
 <!-- Firebase SDK (compat, pinned 10.12.2). Jika CDN gagal dimuat, aplikasi tetap jalan di Mode Lokal. -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -259,6 +280,36 @@ function friendlyFbError(e){
   if(c==="permission-denied") return "Akses ditolak oleh aturan Firestore (hanya admin yang bisa menulis).";
   if(c==="unavailable") return "Firebase tidak bisa dijangkau (offline / diblokir jaringan).";
   return (e&&e.message)||"Terjadi kesalahan.";
+}
+
+/* ---------- Toast & custom confirm (pengganti alert / confirm native) ----------
+   Lihat komentar di atas #confirmOverlay: dialog native tidak tampil di
+   WebView Android tanpa WebChromeClient, jadi semua pesan & konfirmasi
+   user-visible memakai toast/modal in-app ini. */
+let toastTimer=null;
+function showToast(msg,isErr){
+  const t=document.getElementById("toast");
+  if(!t)return;
+  t.textContent=msg;
+  t.className="toast show"+(isErr?" err":"");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){t.classList.remove("show")},4000);
+}
+let confirmResolve=null;
+function askConfirm(title,message,okText){
+  return new Promise(function(resolve){
+    if(confirmResolve){const prev=confirmResolve;confirmResolve=null;prev(false);}
+    document.getElementById("confirmTitle").textContent=title;
+    document.getElementById("confirmMsg").textContent=message;
+    document.getElementById("confirmOkBtn").textContent=okText||"Ya, Hapus";
+    confirmResolve=resolve;
+    document.getElementById("confirmOverlay").classList.add("open");
+    setTimeout(function(){document.getElementById("confirmOkBtn").focus()},50);
+  });
+}
+function closeConfirm(result){
+  document.getElementById("confirmOverlay").classList.remove("open");
+  if(confirmResolve){const r=confirmResolve;confirmResolve=null;r(!!result);}
 }
 
 function initFirebase(){
@@ -487,7 +538,7 @@ function syncCategories(){
   document.getElementById("txCat").innerHTML=CATS[type].map(c=>`<option>${c}</option>`).join("");
 }
 function openTxForm(id){
-  if(!isAdmin()){alert("Login admin dulu.");return}
+  if(!isAdmin()){showToast("Login admin dulu.",true);return}
   document.getElementById("txErr").textContent="";
   syncCategories();
   if(id){
@@ -542,17 +593,20 @@ async function saveTx(){
 async function deleteTx(id){
   const t=txs.find(x=>x.id===id);
   if(!t)return;
-  if(!isAdmin()){alert("Login admin dulu.");return}
-  if(!confirm("Hapus transaksi "+t.category+" "+fmtRp(t.amount)+" ("+(t.note||"tanpa catatan")+")?"))return;
+  if(!isAdmin()){showToast("Login admin dulu.",true);return}
+  const ok=await askConfirm("Hapus transaksi?","Hapus transaksi "+t.category+" "+fmtRp(t.amount)+" ("+(t.note||"tanpa catatan")+")?","Ya, Hapus");
+  if(!ok)return;
   if(MODE==="firebase"){
-    if(!navigator.onLine){alert("Tidak ada koneksi internet — hapus butuh koneksi ke Firebase.");return}
+    if(!navigator.onLine){showToast("Tidak ada koneksi internet — hapus butuh koneksi ke Firebase.",true);return}
     try{
       await db.collection("transactions").doc(id).delete();
       txs=txs.filter(x=>x.id!==id); saveTxAll(txs); render();
-    }catch(e){alert("Gagal menghapus: "+friendlyFbError(e));}
+      showToast("Transaksi dihapus.");
+    }catch(e){showToast("Gagal menghapus: "+friendlyFbError(e),true);}
     return;
   }
   txs=txs.filter(x=>x.id!==id);saveTxAll(txs);render();
+  showToast("Transaksi dihapus.");
 }
 
 /* ---------- Pengaturan Admin ---------- */
@@ -606,36 +660,41 @@ async function importJSON(ev){
       if(!Array.isArray(arr)||!arr.every(t=>t.date&&t.type&&t.category&&typeof t.amount==="number"))throw new Error("format");
       const norm=arr.map(t=>({id:t.id||uid(),date:t.date,type:(t.type==="pemasukan"?"in":t.type==="pengeluaran"?"out":t.type),category:t.category,amount:t.amount,note:t.note||"",demo:!!t.demo,createdAt:t.createdAt||Date.now()}));
       if(MODE==="firebase"){
-        if(!isAdmin()){alert("Login admin dulu.");return}
-        if(!navigator.onLine){alert("Tidak ada koneksi internet.");return}
+        if(!isAdmin()){showToast("Login admin dulu.",true);return}
+        if(!navigator.onLine){showToast("Tidak ada koneksi internet.",true);return}
         for(const t of norm){ await db.collection("transactions").doc(t.id).set(toFirestore(t),{merge:true}); }
-        closeSettings(); alert("Import ke Firebase berhasil: "+norm.length+" transaksi.");
+        closeSettings(); showToast("Import ke Firebase berhasil: "+norm.length+" transaksi.");
       }else{
-        txs=norm; saveTxAll(txs); closeSettings(); render(); alert("Import berhasil: "+txs.length+" transaksi.");
+        txs=norm; saveTxAll(txs); closeSettings(); render(); showToast("Import berhasil: "+txs.length+" transaksi.");
       }
-    }catch(e){alert("File JSON tidak valid.");}
+    }catch(e){showToast("File JSON tidak valid.",true);}
   };
   r.readAsText(f);ev.target.value="";
 }
 async function clearDemo(){
-  if(!confirm("Hapus semua data contoh? Transaksi asli (bukan contoh) tetap ada."))return;
+  const ok=await askConfirm("Hapus data contoh?","Hapus semua data contoh? Transaksi asli (bukan contoh) tetap ada.","Ya, Hapus");
+  if(!ok)return;
   if(MODE==="firebase"){
-    if(!isAdmin()){alert("Login admin dulu.");return}
-    if(!navigator.onLine){alert("Tidak ada koneksi internet.");return}
+    if(!isAdmin()){showToast("Login admin dulu.",true);return}
+    if(!navigator.onLine){showToast("Tidak ada koneksi internet.",true);return}
     const demos=txs.filter(t=>t.demo);
     try{
       for(const t of demos){ await db.collection("transactions").doc(t.id).delete(); }
       txs=txs.filter(t=>!t.demo); saveTxAll(txs); render();
-    }catch(e){alert("Gagal menghapus data contoh: "+friendlyFbError(e));}
+      showToast("Data contoh dihapus ("+demos.length+" transaksi).");
+    }catch(e){showToast("Gagal menghapus data contoh: "+friendlyFbError(e),true);}
     return;
   }
+  const n=txs.filter(t=>t.demo).length;
   txs=txs.filter(t=>!t.demo);saveTxAll(txs);render();
+  showToast("Data contoh dihapus ("+n+" transaksi).");
 }
 async function clearAll(){
-  if(!confirm("HAPUS SEMUA data transaksi? Tindakan ini tidak bisa dibatalkan. Export dulu kalau perlu."))return;
+  const ok=await askConfirm("HAPUS SEMUA data?","HAPUS SEMUA data transaksi? Tindakan ini tidak bisa dibatalkan. Export dulu kalau perlu.","Ya, Hapus Semua");
+  if(!ok)return;
   if(MODE==="firebase"){
-    if(!isAdmin()){alert("Login admin dulu.");return}
-    if(!navigator.onLine){alert("Tidak ada koneksi internet.");return}
+    if(!isAdmin()){showToast("Login admin dulu.",true);return}
+    if(!navigator.onLine){showToast("Tidak ada koneksi internet.",true);return}
     try{
       let batch=db.batch(), n=0;
       for(const t of txs){
@@ -644,10 +703,12 @@ async function clearAll(){
       }
       if(n) await batch.commit();
       txs=[]; saveTxAll(txs); render();
-    }catch(e){alert("Gagal menghapus: "+friendlyFbError(e));}
+      showToast("Semua data transaksi dihapus.");
+    }catch(e){showToast("Gagal menghapus: "+friendlyFbError(e),true);}
     return;
   }
   txs=[];saveTxAll(txs);render();
+  showToast("Semua data transaksi dihapus.");
 }
 
 /* ---------- Init ---------- */
@@ -657,6 +718,12 @@ updateSyncBanner();
 render();
 window.addEventListener("online",function(){updateSyncBanner();render();});
 window.addEventListener("offline",function(){updateSyncBanner();render();});
+document.addEventListener("keydown",function(e){
+  if(e.key==="Escape"){
+    const ov=document.getElementById("confirmOverlay");
+    if(ov&&ov.classList.contains("open")) closeConfirm(false);
+  }
+});
 </script>
 </body>
 </html>

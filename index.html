@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rekapan Monzie — Pemasukan &amp; Pengeluaran Mingguan</title>
+<title>KAS KEUANGAN — Pemasukan &amp; Pengeluaran Mingguan</title>
 <meta name="description" content="Rekapan transaksi pemasukan dan pengeluaran mingguan. Publik bisa memantau, admin bisa mengelola. Data tersinkron via Firebase.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
 <style>
@@ -78,7 +78,7 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
 <div class="wrap">
   <header>
     <div>
-      <h1>Rekapan Monzie</h1>
+      <h1>KAS KEUANGAN</h1>
       <p class="subtitle">Pemasukan &amp; Pengeluaran Mingguan</p>
       <span class="badge" id="roleBadge">👁️ Mode Publik — hanya memantau</span>
     </div>
@@ -137,7 +137,7 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
     <b>Catatan penting:</b> Data aplikasi ini tersimpan di perangkat ini saja (localStorage browser),
     belum ada sinkronisasi server karena konfigurasi Firebase belum diisi. Artinya, entri yang ditambahkan admin di satu perangkat
     <b>tidak otomatis terlihat</b> di perangkat lain.
-    <br>Rekapan Monzie • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.
+    <br>KAS KEUANGAN • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.
   </footer>
 </div>
 
@@ -146,7 +146,7 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
   <div class="modal">
     <h2>Login Admin</h2>
     <label>Email admin</label>
-    <input id="loginEmail" type="email" placeholder="zmonzie@gmail.com" autocomplete="username">
+    <input id="loginEmail" type="email" placeholder="kingmusang578@gmail.com" autocomplete="username">
     <label>Password</label>
     <input id="loginPass" type="password" placeholder="Password admin" autocomplete="current-password">
     <div class="err" id="loginErr"></div>
@@ -264,8 +264,8 @@ function friendlyFbError(e){
 function initFirebase(){
   if(!firebaseConfigured() || typeof firebase==="undefined"){
     MODE="local";
-    if(!firebaseConfigured()) console.info("[Rekapan] Firebase config kosong — Mode Lokal.");
-    else console.warn("[Rekapan] Firebase SDK gagal dimuat dari CDN — Mode Lokal.");
+    if(!firebaseConfigured()) console.info("[KAS KEUANGAN] Firebase config kosong — Mode Lokal.");
+    else console.warn("[KAS KEUANGAN] Firebase SDK gagal dimuat dari CDN — Mode Lokal.");
     return;
   }
   try{
@@ -276,7 +276,7 @@ function initFirebase(){
     auth.onAuthStateChanged(function(u){ fbUser=u; updateRoleUI(); render(); });
     startListener();
   }catch(e){
-    console.warn("[Rekapan] Gagal inisialisasi Firebase, fallback Mode Lokal:", e);
+    console.warn("[KAS KEUANGAN] Gagal inisialisasi Firebase, fallback Mode Lokal:", e);
     MODE="local"; db=null; auth=null;
   }
 }
@@ -290,13 +290,13 @@ function startListener(){
       updateSyncBanner();
       render();
     }, function(err){
-      console.warn("[Rekapan] Firestore listener error:", err);
+      console.warn("[KAS KEUANGAN] Firestore listener error:", err);
       fbConnected=false;
       updateSyncBanner();
       render();
     });
   }catch(e){
-    console.warn("[Rekapan] Gagal memasang listener Firestore:", e);
+    console.warn("[KAS KEUANGAN] Gagal memasang listener Firestore:", e);
     fbConnected=false;
   }
 }
@@ -335,10 +335,10 @@ function updateSyncBanner(){
     }else{
       b.textContent="☁️ Tersinkron via Firebase — perubahan terlihat di semua perangkat.";
     }
-    if(f) f.innerHTML="<b>Catatan penting:</b> Data tersinkron via Firebase — terlihat di semua perangkat. Publik bisa memantau tanpa login; hanya admin yang sudah login yang bisa tambah/edit/hapus.<br>Rekapan Monzie • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.";
+    if(f) f.innerHTML="<b>Catatan penting:</b> Data tersinkron via Firebase — terlihat di semua perangkat. Publik bisa memantau tanpa login; hanya admin yang sudah login yang bisa tambah/edit/hapus.<br>KAS KEUANGAN • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.";
   }else{
     b.textContent="📍 Mode lokal — sinkron belum aktif. Data hanya di perangkat ini. Isi konfigurasi Firebase untuk mengaktifkan sinkronisasi.";
-    if(f) f.innerHTML="<b>Catatan penting:</b> Data aplikasi ini tersimpan di perangkat ini saja (localStorage browser), belum ada sinkronisasi server karena konfigurasi Firebase belum diisi. Artinya, entri yang ditambahkan admin di satu perangkat <b>tidak otomatis terlihat</b> di perangkat lain.<br>Rekapan Monzie • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.";
+    if(f) f.innerHTML="<b>Catatan penting:</b> Data aplikasi ini tersimpan di perangkat ini saja (localStorage browser), belum ada sinkronisasi server karena konfigurasi Firebase belum diisi. Artinya, entri yang ditambahkan admin di satu perangkat <b>tidak otomatis terlihat</b> di perangkat lain.<br>KAS KEUANGAN • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.";
   }
   const up=document.getElementById("uploadBtn");
   if(up) up.disabled=(MODE!=="firebase");
@@ -591,11 +591,11 @@ function download(name,content,type){
   a.href=URL.createObjectURL(new Blob([content],{type:type||"application/json"}));
   a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 }
-function exportJSON(){download("rekapan-monzie.json",JSON.stringify(txs,null,2))}
+function exportJSON(){download("kas-keuangan.json",JSON.stringify(txs,null,2))}
 function exportCSV(){
   const rows=[["tanggal","tipe","kategori","jumlah_rp","catatan"]];
   txs.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(t=>rows.push([t.date,t.type==="in"?"Pemasukan":"Pengeluaran",t.category,t.amount,'"'+(t.note||"").replace(/"/g,'""')+'"']));
-  download("rekapan-monzie.csv",rows.map(r=>r.join(",")).join("\n"),"text/csv");
+  download("kas-keuangan.csv",rows.map(r=>r.join(",")).join("\n"),"text/csv");
 }
 async function importJSON(ev){
   const f=ev.target.files[0];if(!f)return;

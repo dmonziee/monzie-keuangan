@@ -266,6 +266,7 @@ footer{color:var(--muted);font-size:12px;line-height:1.6;margin-top:28px;border-
       <div class="err" id="loginErr"></div>
       <button class="btn primary" onclick="doLogin()">MASUK</button>
       <button class="login-public" onclick="closeLogin()">Lihat ringkasan publik →</button>
+      <button class="login-public" onclick="useLocalFallback()">Firebase bermasalah? Lanjutkan mode lokal →</button>
       <p class="login-note">Publik tidak perlu login — ringkasan kas bisa dipantau siapa saja, hanya admin yang bisa tambah, edit, dan hapus.</p>
     </div>
     <div class="login-foot">
@@ -650,6 +651,13 @@ function jumpToWeek(v){if(!v)return;weekStart=mondayOf(parseDate(v));render()}
 /* ---------- Auth (Firebase Email/Password; v1 admin/admin123 DIHAPUS) ---------- */
 function openLogin(){document.getElementById("loginErr").textContent="";document.getElementById("loginOverlay").classList.add("open");setTimeout(()=>document.getElementById("loginEmail").focus(),50)}
 function closeLogin(){document.getElementById("loginOverlay").classList.remove("open")}
+/* Pemicu manual mode lokal darurat — untuk kasus Firebase terkonfigurasi tapi
+   tak bisa dipakai (mis. proyek di-suspend) padahal listener Firestore
+   masih mengembalikan snapshot kosong, sehingga fallback otomatis tidak jalan. */
+function useLocalFallback(){
+  localFallback=true; closeLogin(); updateSyncBanner(); updateRoleUI(); render();
+  showToast("Mode lokal aktif — tambah/edit/hapus bisa dipakai, data hanya di perangkat ini.");
+}
 async function doLogin(){
   const email=document.getElementById("loginEmail").value.trim();
   const pass=document.getElementById("loginPass").value;

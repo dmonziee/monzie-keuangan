@@ -379,6 +379,17 @@ let fbApp=null, db=null, auth=null, fbUser=null;
 let MODE="local";            /* "local" | "firebase" */
 let fbConnected=false;       /* true setelah snapshot pertama berhasil */
 let preSyncLocal=null;       /* salinan data lokal sebelum listener Firestore menimpa txs */
+/* DARURAT SEMENTARA (26 Nov 2026): proyek Firebase rekapan-monzie di-suspend
+   Google, jadi login gagal & Firestore tak terjangkau. localFallback=true
+   artinya "Firebase terkonfigurasi tapi terbukti tidak bisa dipakai" —
+   aplikasi tetap bisa dipakai penuh di perangkat ini (data localStorage)
+   tanpa login, sampai proyek Firebase baru aktif. HAPUS fallback ini
+   setelah migrasi ke proyek baru selesai (saat itu listener sukses lagi
+   dan mode Firebase normal kembali). Catatan: data lokal TIDAK dibagikan
+   ke perangkat lain selama fallback — upload tersedia via Pengaturan
+   begitu Firebase baru aktif. */
+let localFallback=false;
+function fbUsable(){ return MODE==="firebase" && !localFallback; }
 
 function firebaseConfigured(){return !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId);}
 
@@ -389,6 +400,7 @@ function friendlyFbError(e){
   if(c==="auth/invalid-email") return "Format email tidak valid.";
   if(c==="auth/too-many-requests") return "Terlalu banyak percobaan — coba lagi nanti.";
   if(c==="auth/network-request-failed") return "Tidak ada koneksi internet.";
+  if(((e&&e.message)||"").indexOf("suspended")>=0) return "Proyek Firebase sedang di-suspend Google — aplikasi jalan mode lokal.";
   if(c==="auth/requires-recent-login") return "Sesi login sudah lama — logout lalu login lagi, baru ganti password.";
   if(c==="permission-denied") return "Akses ditolak oleh aturan Firestore (hanya admin yang bisa menulis).";
   if(c==="unavailable") return "Firebase tidak bisa dijangkau (offline / diblokir jaringan).";
@@ -448,6 +460,14 @@ function initFirebase(){
 function startListener(){
   try{
     db.collection("transactions").orderBy("date").onSnapshot(function(snap){
+      if(localFallback){
+        /* Firebase sempat gagal: jangan timpa data lokal (bisa berisi editan
+           mode darurat) dengan snapshot server. */
+        fbConnected=true;
+        updateSyncBanner();
+        render();
+        return;
+      }
       txs=snap.docs.map(docToTx);
       saveTxAll(txs); /* cache terakhir untuk mode offline */
       fbConnected=true;
@@ -456,6 +476,7 @@ function startListener(){
     }, function(err){
       console.warn("[KAS KEUANGAN] Firestore listener error:", err);
       fbConnected=false;
+      localFallback=true; /* Firebase tak terjangkau/disuspend: alihkan ke mode lokal darurat */
       updateSyncBanner();
       render();
     });
@@ -492,24 +513,28 @@ function updateSyncBanner(){
   const b=document.getElementById("syncBanner");
   const f=document.getElementById("syncFooter");
   if(MODE==="firebase"){
-    if(!navigator.onLine){
+    if(localFallback){
+      b.textContent="⚠️ Firebase tidak aktif (proyek di-suspend Google) — Mode lokal darurat: tambah/edit/hapus tetap bisa dipakai, data hanya tersimpan di perangkat ini. Setelah proyek Firebase baru aktif, upload lewat Pengaturan.";
+    }else if(!navigator.onLine){
       b.textContent="📴 Offline — menampilkan data terakhir dari perangkat ini. Menulis data butuh koneksi internet.";
     }else if(!fbConnected){
       b.textContent="☁️ Menghubungkan ke Firebase…";
     }else{
       b.textContent="☁️ Tersinkron via Firebase — perubahan terlihat di semua perangkat.";
     }
-    if(f) f.innerHTML="<b>Catatan penting:</b> Data tersinkron via Firebase — terlihat di semua perangkat. Publik bisa memantau tanpa login; hanya admin yang sudah login yang bisa tambah/edit/hapus.<br>KAS KEUANGAN • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.<br>Proyek open-source oleh <a href='https://github.com/dmonziee' target='_blank' rel='noopener'>@dmonziee</a> — kode sumber: <a href='https://github.com/dmonziee/monzie-keuangan' target='_blank' rel='noopener'>github.com/dmonziee/monzie-keuangan</a>.";
+    if(f) f.innerHTML=localFallback
+      ? "<b>Catatan penting:</b> Proyek Firebase lama sedang di-suspend Google, jadi aplikasi berjalan <b>mode lokal darurat</b>: data tersimpan di perangkat ini saja (localStorage browser) dan <b>tidak terlihat di perangkat lain</b> sampai proyek Firebase baru aktif. Begitu aktif, admin bisa meng-upload data lokal lewat Pengaturan → \"Upload data lokal ke Firebase\".<br>KAS KEUANGAN • monzie.is-a.dev<br>Proyek open-source oleh <a href='https://github.com/dmonziee' target='_blank' rel='noopener'>@dmonziee</a> — kode sumber: <a href='https://github.com/dmonziee/monzie-keuangan' target='_blank' rel='noopener'>github.com/dmonziee/monzie-keuangan</a>."
+      : "<b>Catatan penting:</b> Data tersinkron via Firebase — terlihat di semua perangkat. Publik bisa memantau tanpa login; hanya admin yang sudah login yang bisa tambah/edit/hapus.<br>KAS KEUANGAN • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.<br>Proyek open-source oleh <a href='https://github.com/dmonziee' target='_blank' rel='noopener'>@dmonziee</a> — kode sumber: <a href='https://github.com/dmonziee/monzie-keuangan' target='_blank' rel='noopener'>github.com/dmonziee/monzie-keuangan</a>.";
   }else{
     b.textContent="📍 Mode lokal — sinkron belum aktif. Data hanya di perangkat ini. Isi konfigurasi Firebase untuk mengaktifkan sinkronisasi.";
     if(f) f.innerHTML="<b>Catatan penting:</b> Data aplikasi ini tersimpan di perangkat ini saja (localStorage browser), belum ada sinkronisasi server karena konfigurasi Firebase belum diisi. Artinya, entri yang ditambahkan admin di satu perangkat <b>tidak otomatis terlihat</b> di perangkat lain.<br>KAS KEUANGAN • monzie.is-a.dev • Data contoh ditandai dan bisa dihapus admin di Pengaturan.<br>Proyek open-source oleh <a href='https://github.com/dmonziee' target='_blank' rel='noopener'>@dmonziee</a> — kode sumber: <a href='https://github.com/dmonziee/monzie-keuangan' target='_blank' rel='noopener'>github.com/dmonziee/monzie-keuangan</a>.";
   }
   const up=document.getElementById("uploadBtn");
-  if(up) up.disabled=(MODE!=="firebase");
+  if(up) up.disabled=!fbUsable();
 }
 
 /* ---------- Helpers (sama seperti v1) ---------- */
-function isAdmin(){ return MODE==="firebase" ? !!fbUser : false; }
+function isAdmin(){ return MODE==="firebase" ? (!!fbUser || localFallback) : false; }
 function parseDate(str){const p=str.split("-");return new Date(+p[0],+p[1]-1,+p[2])}
 function fmtDate(d){const p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())}
 function mondayOf(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const dow=(x.getDay()+6)%7;x.setDate(x.getDate()-dow);return x}
@@ -609,10 +634,12 @@ function render(){
 }
 function updateRoleUI(){
   const admin=isAdmin();
-  document.getElementById("roleBadge").textContent=admin?"🛡️ Mode Admin — bisa tambah/edit/hapus":"👁️ Mode Publik — hanya memantau";
-  document.getElementById("roleBadge").className="badge"+(admin?" admin":"");
-  document.getElementById("loginBtn").classList.toggle("hidden",admin);
-  document.getElementById("logoutBtn").classList.toggle("hidden",!admin);
+  const badge=document.getElementById("roleBadge");
+  if(localFallback && !fbUser){ badge.textContent="🛡️ Mode Admin Lokal — data hanya di perangkat ini"; }
+  else badge.textContent=admin?"🛡️ Mode Admin — bisa tambah/edit/hapus":"👁️ Mode Publik — hanya memantau";
+  badge.className="badge"+(admin?" admin":"");
+  document.getElementById("loginBtn").classList.toggle("hidden",admin||localFallback);
+  document.getElementById("logoutBtn").classList.toggle("hidden",!admin||(localFallback&&!fbUser));
   document.getElementById("addBtn").classList.toggle("hidden",!admin);
   document.getElementById("settingsBtn").classList.toggle("hidden",!admin);
 }
@@ -631,12 +658,19 @@ async function doLogin(){
     errEl.textContent="Mode lokal — sinkron belum aktif. Login admin hanya tersedia setelah konfigurasi Firebase diisi.";
     return;
   }
+  if(localFallback){ closeLogin(); showToast("Firebase sedang tidak aktif — mode lokal sudah aktif, tidak perlu login."); render(); return; }
   if(!email||!pass){errEl.textContent="Isi email dan password admin.";return}
   errEl.textContent="Memeriksa…";
   try{
     await auth.signInWithEmailAndPassword(email,pass);
     closeLogin(); render();
   }catch(e){
+    const m=(((e&&e.message)||"")+((e&&e.code)||""));
+    if(m.indexOf("suspended")>=0){
+      localFallback=true; closeLogin(); updateSyncBanner(); updateRoleUI(); render();
+      showToast("Firebase sedang di-suspend Google — mode lokal aktif, bisa langsung catat transaksi.");
+      return;
+    }
     errEl.textContent=friendlyFbError(e);
   }
 }
@@ -685,7 +719,7 @@ async function saveTx(){
   const errEl=document.getElementById("txErr");
   if(!date||!amount||amount<=0){errEl.textContent="Isi tanggal dan jumlah (lebih dari 0).";return}
   if(!isAdmin()){errEl.textContent="Login admin dulu.";return}
-  if(MODE==="firebase"){
+  if(fbUsable()){
     if(!navigator.onLine){errEl.textContent="Tidak ada koneksi internet — sambungkan dulu untuk menyimpan ke Firebase.";return}
     const txId=id||uid();
     const t={id:txId,date,type,category,amount,note,demo:false,createdAt:Date.now()};
@@ -710,7 +744,7 @@ async function deleteTx(id){
   if(!isAdmin()){showToast("Login admin dulu.",true);return}
   const ok=await askConfirm("Hapus transaksi?","Hapus transaksi "+t.category+" "+fmtRp(t.amount)+" ("+(t.note||"tanpa catatan")+")?","Ya, Hapus");
   if(!ok)return;
-  if(MODE==="firebase"){
+  if(fbUsable()){
     if(!navigator.onLine){showToast("Tidak ada koneksi internet — hapus butuh koneksi ke Firebase.",true);return}
     try{
       await db.collection("transactions").doc(id).delete();
@@ -741,7 +775,7 @@ async function changePassword(){
 }
 async function uploadLocalToFirebase(){
   const msg=document.getElementById("settingsErr");
-  if(MODE!=="firebase"){msg.textContent="Mode lokal — sinkron belum aktif. Isi konfigurasi Firebase dulu.";return}
+  if(!fbUsable()){msg.textContent="Firebase belum aktif (proyek lama di-suspend) — upload tersedia setelah proyek Firebase baru aktif.";return}
   if(!isAdmin()){msg.textContent="Login admin dulu.";return}
   if(!navigator.onLine){msg.textContent="Tidak ada koneksi internet.";return}
   const src=(preSyncLocal&&preSyncLocal.length?preSyncLocal:txs);
@@ -773,7 +807,7 @@ async function importJSON(ev){
       const arr=JSON.parse(r.result);
       if(!Array.isArray(arr)||!arr.every(t=>t.date&&t.type&&t.category&&typeof t.amount==="number"))throw new Error("format");
       const norm=arr.map(t=>({id:t.id||uid(),date:t.date,type:(t.type==="pemasukan"?"in":t.type==="pengeluaran"?"out":t.type),category:t.category,amount:t.amount,note:t.note||"",demo:!!t.demo,createdAt:t.createdAt||Date.now()}));
-      if(MODE==="firebase"){
+      if(fbUsable()){
         if(!isAdmin()){showToast("Login admin dulu.",true);return}
         if(!navigator.onLine){showToast("Tidak ada koneksi internet.",true);return}
         for(const t of norm){ await db.collection("transactions").doc(t.id).set(toFirestore(t),{merge:true}); }
@@ -788,7 +822,7 @@ async function importJSON(ev){
 async function clearDemo(){
   const ok=await askConfirm("Hapus data contoh?","Hapus semua data contoh? Transaksi asli (bukan contoh) tetap ada.","Ya, Hapus");
   if(!ok)return;
-  if(MODE==="firebase"){
+  if(fbUsable()){
     if(!isAdmin()){showToast("Login admin dulu.",true);return}
     if(!navigator.onLine){showToast("Tidak ada koneksi internet.",true);return}
     const demos=txs.filter(t=>t.demo);
@@ -806,7 +840,7 @@ async function clearDemo(){
 async function clearAll(){
   const ok=await askConfirm("HAPUS SEMUA data?","HAPUS SEMUA data transaksi? Tindakan ini tidak bisa dibatalkan. Export dulu kalau perlu.","Ya, Hapus Semua");
   if(!ok)return;
-  if(MODE==="firebase"){
+  if(fbUsable()){
     if(!isAdmin()){showToast("Login admin dulu.",true);return}
     if(!navigator.onLine){showToast("Tidak ada koneksi internet.",true);return}
     try{
